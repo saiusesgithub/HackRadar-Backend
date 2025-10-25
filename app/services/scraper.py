@@ -34,20 +34,32 @@ def scrape_hackathons():
     hackathon_cards = soup.select("div[class*='CompactHackathonCard']")
     hackathons = []
     for card in hackathon_cards:
-        title = card.select_one("h3")
-        date = card.select_one("time")
-        link = card.select_one("a")
+        p_tags = card.find_all("p")
+        title = card.select_one("h3").text.strip()
+        link = card.select_one("a")["href"]
+
+        for p_tag in p_tags:
+            if "Offline" in p_tag.get_text() or "Online" in p_tag.get_text():
+                type = p_tag.get_text(strip=True)
+                break
+            
+            if "Starts" in p_tag.get_text():
+                date = p_tag.get_text(strip=True)
+                break
+        if not date:
+            date = "Date not specified"
 
         if title and link:
             hackathons.append({
-                "title": title.text.strip(),
-                "date": date.text.strip() if date else "Date not specified",
-                "link": link["href"],
+                "title": title,
+                "date": date,
+                "link": link,
+                "type": type
             })
 
     print(f"Total hackathons scraped: {len(hackathons)}\n")
     for h in hackathons:
-        print(h["title"], h["date"], h["link"])
+        print(h["title"], h["date"], h["link"], h["type"])
 
 if __name__ == "__main__":
     scrape_hackathons()
