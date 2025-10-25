@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 import time
-from app.services.supabase_service import insert_hackathons
+from app.services.supabase_service import insert_hackathons, delete_previous_hackathons_data
 from app.models.hackathon import Hackathon
 
 def scrape_hackathons():
@@ -34,7 +34,9 @@ def scrape_hackathons():
     soup = BeautifulSoup(html, "html.parser")
 
     hackathon_cards = soup.select("div[class*='CompactHackathonCard']")
-    hackathons = []
+    
+    delete_previous_hackathons_data()
+    
     for card in hackathon_cards:
         p_tags = card.find_all("p")
         title = card.select_one("h3").text.strip()
@@ -67,9 +69,6 @@ def scrape_hackathons():
 
         if title and type:
             insert_hackathons(hackathon_data)
-
-    for h in hackathons:
-        print(h["title"], h["date"], h["link"], h["type"], h["no_of_participants"])
-
+            
 if __name__ == "__main__":
     scrape_hackathons()
