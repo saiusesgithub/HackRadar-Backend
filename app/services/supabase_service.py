@@ -5,9 +5,9 @@ from app.models.hackathon import Hackathon
 
 load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
-supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 def insert_hackathons(hackathons_data: Hackathon):
     supabase.table("open_hackathons").delete().neq("id", 0).execute()
