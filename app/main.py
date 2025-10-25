@@ -1,6 +1,9 @@
 from fastapi import FastAPI
-from app.routes import hackathons
+from app.services.supabase_service import get_hackathons
 
 app = FastAPI(title="Hackathon Scraper API")
 
-app.include_router(hackathons.router)
+@app.get("/hackathons")
+async def hackathons():
+    return get_hackathons()
+

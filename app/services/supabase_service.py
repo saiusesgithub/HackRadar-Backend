@@ -12,10 +12,9 @@ supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 def insert_hackathons(hackathons_data: Hackathon):
     supabase.table("open_hackathons").insert(hackathons_data.dict()).execute()
 
-def get_all_hackathons():
+def get_hackathons():
     response = supabase.table("open_hackathons").select("*").execute()
     return response.data
-
 
 
            
