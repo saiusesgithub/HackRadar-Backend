@@ -1,11 +1,29 @@
-from supabase import create_client
-from app.core.config import SUPABASE_URL, SUPABASE_KEY
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
+from app.models.hackathon import Hackathon
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+load_dotenv()
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-def insert_hackathons(hackathon_data):
-    supabase.table("hackathons").insert(hackathon_data).execute()
+supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+def insert_hackathons(hackathons_data: Hackathon):
+    supabase.table("open_hackathons").insert(hackathons_data.dict()).execute()
 
 def get_all_hackathons():
-    response = supabase.table("hackathons").select("*").execute()
+    response = supabase.table("open_hackathons").select("*").execute()
     return response.data
+
+
+
+           
+
+
+
+
+
+
+
+

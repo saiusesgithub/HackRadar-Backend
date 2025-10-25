@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 import time
+from app.services.supabase_service import insert_hackathons
+from app.models.hackathon import Hackathon
 
 def scrape_hackathons():
     with sync_playwright() as p:
@@ -21,7 +23,7 @@ def scrape_hackathons():
             # Check if page height changed
             current_height = page.evaluate("document.body.scrollHeight")
             if current_height == previous_height:
-                scroll_attempts += 1  # nothing new loaded → increment
+                scroll_attempts += 1  # nothing new loaded then increment
             else:
                 scroll_attempts = 0  # reset if new content loaded
             previous_height = current_height
@@ -42,24 +44,32 @@ def scrape_hackathons():
             if "Offline" in p_tag.get_text() or "Online" in p_tag.get_text():
                 type = p_tag.get_text(strip=True)
                 break
-            
+        
+        for p_tag in p_tags:
+            if "participating" in p_tag.get_text():
+                no_of_participants = p_tag.get_text(strip=True)
+                break
+        
+        for p_tag in p_tags:
             if "Starts" in p_tag.get_text():
                 date = p_tag.get_text(strip=True)
-                break
+                break      
         if not date:
             date = "Date not specified"
 
-        if title and link:
-            hackathons.append({
-                "title": title,
-                "date": date,
-                "link": link,
-                "type": type
-            })
+        hackathon_data: Hackathon = Hackathon(
+            title=title,
+            date=date,
+            link=link,
+            type=type,
+            no_of_participants=no_of_participants
+        )
 
-    print(f"Total hackathons scraped: {len(hackathons)}\n")
+        if title and type:
+            insert_hackathons(hackathon_data)
+
     for h in hackathons:
-        print(h["title"], h["date"], h["link"], h["type"])
+        print(h["title"], h["date"], h["link"], h["type"], h["no_of_participants"])
 
 if __name__ == "__main__":
     scrape_hackathons()
