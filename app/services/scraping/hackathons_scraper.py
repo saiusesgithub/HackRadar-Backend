@@ -6,12 +6,17 @@ from app.models.hackathon import Hackathon
 from app.services.scraping.hackathon_details_scraper import scrape_hackathon_data
 
 def scrape_hackathons():
+    print("🚀 Starting hackathon scraper...")
     with sync_playwright() as p:
+        print("🌐 Launching browser...")
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
+        print("📡 Navigating to Devfolio hackathons page...")
         page.goto("https://devfolio.co/hackathons/open", wait_until="networkidle")
+        print("✅ Page loaded successfully!")
 
         # code for getting data from lazy loaded website
+        print("⏬ Scrolling to load all hackathons...")
         previous_height = 0
         scroll_attempts = 0
         max_attempts = 10 
@@ -25,20 +30,33 @@ def scrape_hackathons():
             current_height = page.evaluate("document.body.scrollHeight")
             if current_height == previous_height:
                 scroll_attempts += 1  # nothing new loaded then increment
+                print(f"   Scroll attempt {scroll_attempts}/{max_attempts} - no new content")
             else:
                 scroll_attempts = 0  # reset if new content loaded
+                print(f"   New content loaded at height: {current_height}px")
             previous_height = current_height
 
+        print("✅ Scrolling complete!")
         html = page.content()
         browser.close()
+        print("🔒 Browser closed")
 
+    print("🔍 Parsing HTML content...")
     soup = BeautifulSoup(html, "html.parser")
 
     hackathon_cards = soup.select("div[class*='CompactHackathonCard']")
+    print(f"📋 Found {len(hackathon_cards)} hackathon cards")
     
+    print("🗑️  Deleting previous hackathon data from database...")
     delete_previous_hackathons_data()
+    print("✅ Previous data deleted")
     
-    for card in hackathon_cards:
+    print(f"\n{'='*60}")
+    print("📝 Starting to process hackathon cards...")
+    print(f"{'='*60}\n")
+    
+    for index, card in enumerate(hackathon_cards, 1):
+        print(f"🔄 Processing card {index}/{len(hackathon_cards)}...")
         p_tags = card.find_all("p")
         
         title_tag = card.select_one("h3")
@@ -49,7 +67,11 @@ def scrape_hackathons():
         
         # Skip if no link is found
         if not link:
+            print(f"   ⚠️  Skipping card {index} - no link found")
             continue
+        
+        print(f"   Title: {title}")
+        print(f"   Link: {link}")
 
         type = "Not specified"
         for p_tag in p_tags:
@@ -69,7 +91,14 @@ def scrape_hackathons():
                 date = p_tag.get_text(strip=True)
                 break
 
+        print(f"   📊 Extracted data - Type: {type}, Date: {date}, Participants: {no_of_participants}")
+        print(f"   🔗 Fetching detailed information...")
         scrape_hackathon_data(title=title,start_date=date,hackathon_url=link,type=type,no_of_participants=no_of_participants)
+        print(f"   ✅ Card {index} processed successfully!\n")
+    
+    print(f"\n{'='*60}")
+    print(f"🎉 Scraping completed! Processed {len(hackathon_cards)} hackathons")
+    print(f"{'='*60}\n")
             
 if __name__ == "__main__":
     scrape_hackathons()

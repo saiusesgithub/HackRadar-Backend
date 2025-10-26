@@ -6,6 +6,7 @@ from app.models.hackathon import Hackathon
 from urllib.parse import urljoin
 
 def scrape_hackathon_data(title: str,start_date: str,hackathon_url: str,type: str,no_of_participants: str):
+    print(f"      🌐 Opening hackathon page: {hackathon_url}")
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
@@ -14,16 +15,26 @@ def scrape_hackathon_data(title: str,start_date: str,hackathon_url: str,type: st
         html = page.content()
         browser.close()
 
+    print(f"      🔍 Extracting detailed information...")
     soup = BeautifulSoup(html, "html.parser")
     title = get_title(soup)
-    tagline = get_tagline(soup) 
+    print(f"         • Title: {title}")
+    tagline = get_tagline(soup)
+    print(f"         • Tagline: {tagline[:50]}..." if len(tagline) > 50 else f"         • Tagline: {tagline}")
     duration_date = get_duration_date(soup)
+    print(f"         • Duration: {duration_date}")
     description = get_description(soup)
+    print(f"         • Description: {description[:50]}..." if len(description) > 50 else f"         • Description: {description}")
     team_size = get_team_size(soup)
+    print(f"         • Team size: {team_size}")
     image_url = get_image_url(soup, hackathon_url,title)
+    print(f"         • Image URL: {image_url[:50]}..." if len(image_url) > 50 else f"         • Image URL: {image_url}")
     prize_pool = get_prize_pool(soup)
+    print(f"         • Prize pool: {prize_pool}")
     location = get_location(soup)
+    print(f"         • Location: {location}")
     registration_cost = get_registration_cost(soup)
+    print(f"         • Registration cost: {registration_cost}")
     
     hackathon_data: Hackathon = Hackathon(
         title=title,
@@ -41,7 +52,9 @@ def scrape_hackathon_data(title: str,start_date: str,hackathon_url: str,type: st
         registration_cost=registration_cost
         )
     
+    print(f"      💾 Saving hackathon to database...")
     insert_hackathons(hackathon_data)
+    print(f"      ✅ Successfully saved to database!")
   
 def get_location(soup):
         label = soup.find(text="Happening")
