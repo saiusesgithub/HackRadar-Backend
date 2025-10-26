@@ -1,9 +1,7 @@
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright,expect
-import time
-from app.services.supabase_service import insert_hackathons, delete_previous_hackathons_data
+from playwright.sync_api import sync_playwright
+from app.services.supabase_service import insert_hackathons
 from app.models.hackathon import Hackathon
-import requests
 from urllib.parse import urljoin
       
 def scrape_hackathon_data(hackathon_url: str):
@@ -16,69 +14,16 @@ def scrape_hackathon_data(hackathon_url: str):
         browser.close()
 
     soup = BeautifulSoup(html, "html.parser")
-    # print(soup.prettify())
-    
-    title = soup.select_one("h1").text.strip()
-    tagline = soup.select_one(".sc-dkzDqf.kCyCoN").text.strip()
-    date = soup.select_one(".sc-hKMtZM.hYgQkO").text.strip()
-    # location = soup.select_one(".sc-hKMtZM.hYgQkO").text.strip()
-    # description = soup.select_one(".sc-dkzDqf.kCyCoN").text.strip()
-    description = soup.select_one("[class*='ReadMore__StyledBox']").text.strip()
-    team_size = soup.select_one(".sc-hKMtZM.iHjekU").text.strip()
-    # registration_cost = soup.select_one(".sc-hKMtZM.iHjekU").text.strip()
-    # prize_pool = soup.select_one(".sc-dkzDqf.hUqWTC")
-    # simplest: get the <img> inside the container and absolutize its src
-    img_element = soup.select_one(".sc-hKMtZM.gynsEi img")
-    image_url = urljoin(hackathon_url, img_element.get("src"))
-    prize_pool = soup.select_one("h2").text.strip()
-    
-    
-    # def get_prize_pool(soup):
-    #     label = soup.find(text="Prize Pool")
-    #     if label:
-    #         prize_pool_tag = label.find_next("p")
-    #         if prize_pool_tag:
-    #             return prize_pool_tag.text.strip()
-    #     return "Not specified"
-
-    def get_location(soup):
-        label = soup.find(text="Happening")
-        if label:
-            location_tag = label.find_next("p")
-            if location_tag:
-                return location_tag.text.strip()
-        return "Not specified"
-    
-    def get_registration_cost(soup):
-        label = soup.find(text="Registration costs?")
-        if label:
-            reg_cost_tag = label.find_next("p")
-            if reg_cost_tag:
-                return reg_cost_tag.text.strip()
-        return "Not specified"
-    
-    # prize_pool = get_prize_pool(soup)
+    title = get_title(soup)
+    tagline = get_tagline(soup) 
+    date = get_date(soup)
+    description = get_description(soup)
+    team_size = get_team_size(soup)
+    image_url = get_image_url(soup, hackathon_url)
+    prize_pool = get_prize_pool(soup)
     location = get_location(soup)
     registration_cost = get_registration_cost(soup)
     
-    
-    # # getting the element which has the literal text - 'Prize Pool'
-    # label = page.locator("text=Prize Pool").first
-    # # Get the next <p> tag after the label
-    # next_label = label.locator("xpath=following::p[1]")
-    # prize_pool = next_label.text_content()
-
-    # # getting the element which has the literal text - 'Happening'
-    # label = page.locator("text=Happening").first
-    # # Get the next <p> tag after the label
-    # next_label = label.locator("xpath=following::p[1]")
-    # location = next_label.text_content()
-
-    # # getting the element which has the literal text - 'Registration costs'
-    # label = page.locator("text=Registration costs").first
-    # # Get the next <p> tag after the label
-    # next_label = label.locator("xpath=following::p[1]")
-    # registration_cost = next_label.text_content()
 
     # write this data to a file 
     output_lines = [
@@ -99,10 +44,6 @@ def scrape_hackathon_data(hackathon_url: str):
 
     print(f"Saved hackathon details to {out_path}")
 
-    
-    # hackathon_cards = soup.select("div[class*='CompactHackathonCard']")
-    
-    # delete_previous_hackathons_data()
     
     # for card in hackathon_cards:
     #     p_tags = card.find_all("p")
@@ -137,6 +78,52 @@ def scrape_hackathon_data(hackathon_url: str):
     #     if title and type:
     #         insert_hackathons(hackathon_data)
   
+  
+  
+def get_location(soup):
+        label = soup.find(text="Happening")
+        if label:
+            location_tag = label.find_next("p")
+            if location_tag:
+                return location_tag.text.strip()
+        return "Not specified"
+    
+def get_registration_cost(soup):
+        label = soup.find(text="Registration costs?")
+        if label:
+            reg_cost_tag = label.find_next("p")
+            if reg_cost_tag:
+                return reg_cost_tag.text.strip()
+        return "Not specified"
+
+def get_title(soup):
+    title = soup.select_one("h1").text.strip()
+    return title
+
+def get_tagline(soup):
+    tagline = soup.select_one(".sc-dkzDqf.kCyCoN").text.strip()
+    return tagline
+
+def get_date(soup):
+    date = soup.select_one(".sc-hKMtZM.hYgQkO").text.strip()
+    return date
+
+def get_description(soup):
+    description = soup.select_one("[class*='ReadMore__StyledBox']").text.strip()
+    return description
+
+def get_team_size(soup):
+    team_size = soup.select_one(".sc-hKMtZM.iHjekU").text.strip()
+    return team_size
+
+def get_image_url(soup, hackathon_url: str):
+    img_element = soup.select_one(".sc-hKMtZM.gynsEi img")
+    image_url = urljoin(hackathon_url, img_element.get("src"))
+    return image_url
+
+def get_prize_pool(soup):
+    prize_pool = soup.select_one("h2").text.strip()
+    return prize_pool
     
 scrape_hackathon_data("https://hack-karnataka.devfolio.co/overview")
       
