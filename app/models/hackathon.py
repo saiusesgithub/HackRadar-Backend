@@ -2,12 +2,12 @@ from pydantic import BaseModel
 
 class Hackathon(BaseModel):
     title: str
-    start_date: str
     link: str
     type: str
     no_of_participants: str
-    tagline: str 
+    start_date: str
     duration_date: str
+    tagline: str 
     description: str
     team_size: str
     image_url: str

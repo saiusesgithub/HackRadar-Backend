@@ -40,25 +40,34 @@ def scrape_hackathons():
     
     for card in hackathon_cards:
         p_tags = card.find_all("p")
-        title = card.select_one("h3").text.strip()
-        link = card.select_one("a")["href"]
+        
+        title_tag = card.select_one("h3")
+        title = title_tag.text.strip() if title_tag else "Untitled Hackathon"
+        
+        link_tag = card.select_one("a")
+        link = link_tag["href"] if link_tag and link_tag.get("href") else None
+        
+        # Skip if no link is found
+        if not link:
+            continue
 
+        type = "Not specified"
         for p_tag in p_tags:
             if "Offline" in p_tag.get_text() or "Online" in p_tag.get_text():
                 type = p_tag.get_text(strip=True)
                 break
         
+        no_of_participants = "Not specified"
         for p_tag in p_tags:
             if "participating" in p_tag.get_text():
                 no_of_participants = p_tag.get_text(strip=True)
                 break
         
+        date = "Date not specified"
         for p_tag in p_tags:
             if "Starts" in p_tag.get_text():
                 date = p_tag.get_text(strip=True)
-                break      
-        if not date:
-            date = "Date not specified"
+                break
 
         scrape_hackathon_data(title=title,start_date=date,hackathon_url=link,type=type,no_of_participants=no_of_participants)
             
