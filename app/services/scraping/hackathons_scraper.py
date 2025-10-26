@@ -3,6 +3,7 @@ from playwright.sync_api import sync_playwright
 import time
 from app.services.supabase_service import insert_hackathons, delete_previous_hackathons_data
 from app.models.hackathon import Hackathon
+from app.services.scraping.hackathon_details_scraper import scrape_hackathon_data
 
 def scrape_hackathons():
     with sync_playwright() as p:
@@ -59,16 +60,7 @@ def scrape_hackathons():
         if not date:
             date = "Date not specified"
 
-        hackathon_data: Hackathon = Hackathon(
-            title=title,
-            date=date,
-            link=link,
-            type=type,
-            no_of_participants=no_of_participants
-        )
-
-        if title and type:
-            insert_hackathons(hackathon_data)
+        scrape_hackathon_data(title=title,start_date=date,hackathon_url=link,type=type,no_of_participants=no_of_participants)
             
 if __name__ == "__main__":
     scrape_hackathons()
